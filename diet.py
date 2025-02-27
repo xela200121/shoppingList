@@ -8,9 +8,13 @@ if 'shopping_list' not in st.session_state:
 # Titolo dell'app
 st.title("🛒 Lista della Spesa")
 
+# Unità di misura disponibili
+units = ["g", "ml", "cucchiai", "pz"]
+
 # Funzione per aggiungere un alimento
-def add_food(food, quantity):
-    st.session_state.shopping_list[food] += quantity
+def add_food(food, quantity, unit):
+    key = f"{food} ({unit})"  # Aggiunge l'unità di misura al nome dell'alimento
+    st.session_state.shopping_list[key] += quantity
 
 # Funzione per rimuovere un alimento
 def remove_food(food):
@@ -18,33 +22,35 @@ def remove_food(food):
         del st.session_state.shopping_list[food]
 
 # Funzione per modificare un alimento
-def edit_food(old_food, new_food, new_quantity):
+def edit_food(old_food, new_food, new_quantity, new_unit):
     if old_food in st.session_state.shopping_list:
         remove_food(old_food)
-        add_food(new_food, new_quantity)
+        add_food(new_food, new_quantity, new_unit)
 
 # Input per aggiungere un alimento
 st.header("Aggiungi un alimento")
-food_input = st.text_input("Inserisci l'alimento e la quantità (es. mozzarella 100g):")
+col1, col2 = st.columns([3, 1])  # Divide l'input in due colonne
+
+with col1:
+    food_input = st.text_input("Inserisci l'alimento:")
+
+with col2:
+    unit = st.selectbox("Unità di misura:", units)
+
+quantity = st.number_input("Quantità:", min_value=0)
 
 if st.button("Aggiungi"):
-    if food_input:
-        try:
-            # Separa l'alimento dalla quantità
-            food, quantity = food_input.rsplit(' ', 1)
-            quantity_value = int(''.join(filter(str.isdigit, quantity)))  # Estrae il numero dalla quantità
-            add_food(food, quantity_value)
-            st.success(f"Aggiunto: {food} {quantity_value}g")
-        except ValueError:
-            st.error("Formato non valido. Usa il formato 'alimento quantità' (es. mozzarella 100g).")
+    if food_input and quantity > 0:
+        add_food(food_input, quantity, unit)
+        st.success(f"Aggiunto: {food_input} {quantity}{unit}")
     else:
-        st.error("Inserisci un alimento e una quantità.")
+        st.error("Inserisci un alimento e una quantità validi.")
 
 # Visualizza la lista della spesa
 st.header("Lista della Spesa")
 if st.session_state.shopping_list:
     for food, quantity in st.session_state.shopping_list.items():
-        st.write(f"- {food}: {quantity}g")
+        st.write(f"- {food}: {quantity}")
 else:
     st.write("La lista della spesa è vuota.")
 
@@ -59,14 +65,22 @@ if st.session_state.shopping_list:
     # Selezione dell'alimento da modificare
     food_to_edit = st.selectbox("Seleziona l'alimento da modificare:", list(st.session_state.shopping_list.keys()))
     
-    # Input per il nuovo nome e la nuova quantità
-    new_food = st.text_input("Nuovo nome dell'alimento:", value=food_to_edit)
-    new_quantity = st.number_input("Nuova quantità (in grammi):", value=st.session_state.shopping_list[food_to_edit], min_value=0)
+    # Estrae il nome e l'unità di misura dall'alimento selezionato
+    if "(" in food_to_edit:
+        old_food, old_unit = food_to_edit.split(" (")
+        old_unit = old_unit[:-1]  # Rimuove la parentesi chiusa
+    else:
+        old_food, old_unit = food_to_edit, "g"
+
+    # Input per il nuovo nome, la nuova quantità e la nuova unità di misura
+    new_food = st.text_input("Nuovo nome dell'alimento:", value=old_food)
+    new_quantity = st.number_input("Nuova quantità:", value=st.session_state.shopping_list[food_to_edit], min_value=0)
+    new_unit = st.selectbox("Nuova unità di misura:", units, index=units.index(old_unit))
 
     if st.button("Modifica"):
         if new_food and new_quantity >= 0:
-            edit_food(food_to_edit, new_food, new_quantity)
-            st.success(f"Modificato: {new_food} {new_quantity}g")
+            edit_food(food_to_edit, new_food, new_quantity, new_unit)
+            st.success(f"Modificato: {new_food} {new_quantity}{new_unit}")
             st.rerun()  # Ricarica l'applicazione per aggiornare la lista
         else:
             st.error("Inserisci un nome e una quantità validi.")
