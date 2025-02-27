@@ -67,6 +67,7 @@ if st.session_state.shopping_list:
         if new_food and new_quantity >= 0:
             edit_food(food_to_edit, new_food, new_quantity)
             st.success(f"Modificato: {new_food} {new_quantity}g")
+            st.rerun()  # Ricarica l'applicazione per aggiornare la lista
         else:
             st.error("Inserisci un nome e una quantità validi.")
 else:
