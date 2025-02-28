@@ -1,5 +1,4 @@
 psycopg2
 streamlit
-os
 defaultdict
 psycopg2-binary
