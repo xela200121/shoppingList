@@ -1,7 +1,6 @@
 import streamlit as st
 from collections import defaultdict
 import psycopg2
-from dotenv import load_dotenv
 import os
 
 # Fetch variables
